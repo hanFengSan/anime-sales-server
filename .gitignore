@@ -1,0 +1,16 @@
+# Maven #
+target/
+
+# IDEA #
+.idea/
+*.iml
+
+# Eclipse #
+.settings/
+.classpath
+.project
+
+# jrebel #
+src/main/resources/rebel.xml
+
+src/main/java/tk/mybatis/springboot/OriconID.java
