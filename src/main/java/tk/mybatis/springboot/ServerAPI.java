@@ -8,7 +8,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.*;
 import rx.Observable;
 import rx.schedulers.Schedulers;
-import tk.mybatis.springboot.bean.RawTimeRankContainer;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,7 +18,6 @@ import java.util.List;
  */
 public class ServerAPI {
 
-    public final static String mAnimeDiscsHost = "http://www.anime-discs.com/";
     public final static String mOriconHost = "https://ranking.oricon.co.jp";
 
     public final static int loginX = 34;
@@ -28,7 +26,6 @@ public class ServerAPI {
     private static String mCookies = "";
 
     private static OriconAPI mOriconAPI;
-    private static SakuraAPI mSakuraAPI;
 
     public static OriconAPI getOriconAPI() {
         if (mOriconAPI == null) {
@@ -156,18 +153,6 @@ public class ServerAPI {
         return mCookies;
     }
 
-    public static SakuraAPI getSakuraAPI() {
-        if (mSakuraAPI == null) {
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(ServerAPI.mAnimeDiscsHost)
-                    .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-
-            mSakuraAPI = retrofit.create(SakuraAPI.class);
-        }
-        return mSakuraAPI;
-    }
 
     public interface OriconAPI {
         @FormUrlEncoded
@@ -186,13 +171,6 @@ public class ServerAPI {
 
         @GET
         Observable<ResponseBody> getCutomUrl(@Url String url);
-
-    }
-
-    public interface SakuraAPI {
-
-        @GET("/sakura.do")
-        Observable<List<RawTimeRankContainer>> getData();
 
     }
 

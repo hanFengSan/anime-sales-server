@@ -6,7 +6,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import tk.mybatis.springboot.model.Matches;
 import tk.mybatis.springboot.model.User;
-import tk.mybatis.springboot.pojo.RankMonitor;
 import tk.mybatis.springboot.service.MatchesService;
 import tk.mybatis.springboot.service.UserService;
 import tk.mybatis.springboot.util.AppPush;
@@ -110,19 +109,6 @@ public class HomeController {
         ResponseUtils.renderJson(response, JsonResponse.getJson("result", "OK"));
     }
 
-    @RequestMapping("/run")
-    public void run(HttpServletRequest request,
-                    HttpServletResponse response) {
-        RankMonitor.getInstance().run();
-        ResponseUtils.renderJson(response, JsonResponse.getJson("result", "run"));
-    }
-
-    @RequestMapping("/stop")
-    public void stop(HttpServletRequest request,
-                    HttpServletResponse response) {
-        RankMonitor.getInstance().stop();
-        ResponseUtils.renderJson(response, JsonResponse.getJson("result", "stop"));
-    }
 //
 //    @RequestMapping("/setTimeGap")
 //    public void stop(HttpServletRequest request,
