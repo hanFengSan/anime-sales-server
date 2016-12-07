@@ -8,7 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-import tk.mybatis.springboot.business.DailySalesService;
+import tk.mybatis.springboot.business.SalesService;
 
 /**
  * @author liuzh
@@ -24,7 +24,7 @@ public class Application extends WebMvcConfigurerAdapter {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
 
-        DailySalesService.getInstance().run();
+        SalesService.getInstance().run();
 
 //        RankMonitor.getInstance().run();
     }

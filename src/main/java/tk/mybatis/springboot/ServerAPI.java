@@ -163,11 +163,11 @@ public class ServerAPI {
         @GET("/contents/index.asp")
         Observable<ResponseBody> index();
 
-        @GET("/contents/ranking/daily/index.asp?chart_kbn=106103")
-        Observable<ResponseBody> getDailyAnimeBDRank();
+        @GET("/contents/ranking/daily/index.asp")
+        Observable<ResponseBody> getDailySales(@Query("chart_kbn") String flag);
 
-        @GET("/contents/ranking/weekly/index.asp?chart_kbn=116103")
-        Observable<ResponseBody> getWeeklyAnimeBDRank();
+        @GET("/contents/ranking/weekly/index.asp")
+        Observable<ResponseBody> getWeeklySales(@Query("chart_kbn") String flag);
 
         @GET
         Observable<ResponseBody> getCutomUrl(@Url String url);
