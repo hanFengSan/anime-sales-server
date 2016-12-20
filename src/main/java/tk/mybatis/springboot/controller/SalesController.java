@@ -3,6 +3,7 @@ package tk.mybatis.springboot.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import tk.mybatis.springboot.Application;
 import tk.mybatis.springboot.business.SalesService;
 import tk.mybatis.springboot.util.JsonResponse;
 import tk.mybatis.springboot.util.ResponseUtils;
@@ -28,6 +29,7 @@ public class SalesController {
     public void getDaily(HttpServletRequest request,
                         HttpServletResponse response,
                         @RequestParam(value = "flag") String flag) {
+        Application.logger.info(String.format("IP:%s ", request.getRemoteAddr()));
         ResponseUtils.renderJson(response, SalesService.getInstance().getDaily(flag));
     }
 
@@ -35,6 +37,7 @@ public class SalesController {
     public void getWeekly(HttpServletRequest request,
                          HttpServletResponse response,
                          @RequestParam(value = "flag") String flag) {
+        Application.logger.info(String.format("IP:%s ", request.getRemoteAddr()));
         ResponseUtils.renderJson(response, SalesService.getInstance().getWeekly(flag));
     }
 }

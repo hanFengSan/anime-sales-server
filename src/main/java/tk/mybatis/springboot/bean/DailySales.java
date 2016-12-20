@@ -10,19 +10,33 @@ import java.util.List;
  */
 public class DailySales extends Entity {
     private int rank;
+    private int sales = -1;
     private String title;
-    private String publisher;
-    private String releaseDate;
     private String artist;
+    private String releaseDate;
+    private String publisher;
 
-    public DailySales() {}
+    public DailySales() {
+    }
 
     public DailySales(List<String> list) {
         this.rank = Integer.valueOf(list.get(0));
-        this.title = list.get(1);
-        this.publisher = list.get(2);
-        this.releaseDate = list.get(3);
-        this.artist = list.get(4);
+        if (list.size() == 5) { // normal
+            this.title = list.get(1);
+            this.publisher = list.get(2);
+            this.releaseDate = list.get(3);
+            this.artist = list.get(4);
+        } else if (list.size() == 6) {
+            if (list.get(1).equals("-")) {
+                this.sales = 0;
+            } else {
+                this.sales = Integer.valueOf(list.get(1).replace(",", ""));
+            }
+            this.title = list.get(2);
+            this.publisher = list.get(3);
+            this.releaseDate = list.get(4);
+            this.artist = list.get(5);
+        }
     }
 
     public int getRank() {
@@ -31,6 +45,14 @@ public class DailySales extends Entity {
 
     public void setRank(int rank) {
         this.rank = rank;
+    }
+
+    public int getSales() {
+        return sales;
+    }
+
+    public void setSales(int sales) {
+        this.sales = sales;
     }
 
     public String getTitle() {

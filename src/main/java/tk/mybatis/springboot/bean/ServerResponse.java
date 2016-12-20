@@ -1,5 +1,6 @@
 package tk.mybatis.springboot.bean;
 
+import tk.mybatis.springboot.Application;
 import tk.mybatis.springboot.bean.base.Entity;
 
 /**
@@ -11,6 +12,13 @@ public class ServerResponse extends Entity {
     private int code;
     private String message;
     private String data;
+
+    public ServerResponse(int code, String message, String data) {
+        this.code = code;
+        this.message = message;
+        this.data = data;
+        Application.logger.info("Data: " + this.data);
+    }
 
     public int getCode() {
         return code;

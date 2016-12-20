@@ -2,12 +2,13 @@ package tk.mybatis.springboot.business;
 
 import com.google.gson.Gson;
 import okhttp3.ResponseBody;
+import org.joda.time.DateTime;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 import tk.mybatis.springboot.Application;
 import tk.mybatis.springboot.ServerAPI;
 import tk.mybatis.springboot.bean.DailySales;
-import tk.mybatis.springboot.bean.ListContainer;
+import tk.mybatis.springboot.bean.SalesContainer;
 import tk.mybatis.springboot.bean.WeeklySales;
 
 import java.nio.charset.Charset;
@@ -27,10 +28,10 @@ public class SalesService {
     public static final int STATUS_INITING = 1; // 初始化中, 暂不能提供服务
     public static final int STATUS_RUNNING = 2; // 运行中, 可提供服务
 
-    private static int mTimeGapOfUpdate = 60 * 2; //sec
+    private static int mTimeGapOfBigReconnect = 60 * 2; //sec
     private static int mTimeGapOfReconnect = 2; //sec
     private static int mCheckTime = 0;
-    private static int mReconnectTimes = 5;
+    private static int mReconnectTimes = 10;
 
     private static final String[] DAILY = {
             "106103", // daily anime BD
@@ -46,10 +47,14 @@ public class SalesService {
     private static final String[] WEEKLY = {
             "116103", // weekly anime BD
             "114103", // weekly anime DVD
+            "114103", // weekly anime dvd
             "116", // weekly video BD
             "114", // weekly video DVD
             "111", // weekly single
             "11A", // weekly ablum
+            "116102", // weekly music bd
+            "116101", // weekly movie bd
+            "116104", // weekly tv bd
     };
 
     private int mStatus;
@@ -68,18 +73,35 @@ public class SalesService {
 
     public void run() {
         if (mStatus != STATUS_STOPPED) {
-            Application.logger.info("已经在运行");
+            Application.logger.info("is running");
             return;
         }
-        Application.logger.info("初始化...");
+        Application.logger.info("init...");
         mStatus = STATUS_INITING;
 
-        getData();
+        Observable.just("")
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.newThread())
+                .subscribe(tmp -> {
+                    while (mStatus != STATUS_STOPPED) {
+                        try {
+                            getData();
+                            DateTime now = DateTime.now();
+                            DateTime updateTime = now.plusHours(1);
+                            updateTime = new DateTime(updateTime.getMillis() - updateTime.getMillis() % (60 * 60 * 1000));
+                            Application.logger.info("sleep " + (updateTime.getMillis() - now.getMillis()) / 1000 / 60 + "min");
+                            Thread.sleep(updateTime.getMillis() - now.getMillis());
+                        } catch (Throwable e) {
+                            Application.logger.error("had a error in outer");
+                            Application.logger.error(e.toString());
+                        }
+                    }
+                });
     }
 
     public void stop() {
         mStatus = STATUS_STOPPED;
-        Application.logger.info("停止了运行");
+        Application.logger.info("stopped");
     }
 
     private void getData() {
@@ -93,8 +115,10 @@ public class SalesService {
     }
 
     private void saveDailySalesCache(String flag, String html) {
-        ListContainer<DailySales> container = new ListContainer<>();
-        container.list = (SalesTableService.getInstance().getDailySalesList(html));
+        SalesContainer<DailySales> container = new SalesContainer<>();
+        container.setList((SalesTableService.getInstance().getDailySalesList(html)));
+        container.setUpdateTime(SalesTableService.getInstance().getUpdateTime(html, true));
+        container.setNextUpdateTime(SalesTableService.getInstance().getNextUpdateTime(container.getUpdateTime(), true));
         if (mDailySales.containsKey(flag)) {
             mDailySales.replace(flag, gson.toJson(container));
         } else {
@@ -103,8 +127,10 @@ public class SalesService {
     }
 
     private void saveWeeklySalesCache(String flag, String html) {
-        ListContainer<WeeklySales> container = new ListContainer<>();
-        container.list = (SalesTableService.getInstance().getWeeklySalesList(html));
+        SalesContainer<WeeklySales> container = new SalesContainer<>();
+        container.setList((SalesTableService.getInstance().getWeeklySalesList(html)));
+        container.setUpdateTime(SalesTableService.getInstance().getUpdateTime(html, false));
+        container.setNextUpdateTime(SalesTableService.getInstance().getNextUpdateTime(container.getUpdateTime(), false));
         if (mWeeklySales.containsKey(flag)) {
             mWeeklySales.replace(flag, gson.toJson(container));
         } else {
@@ -135,12 +161,16 @@ public class SalesService {
                     Application.logger.error(String.format("Daily %s update failed, error: %s, reconnetTimes: %d", flag,
                             throwable.toString(), reconnectTimes));
                     int reconnect = reconnectTimes - 1;
-                    try {
-                        TimeUnit.SECONDS.sleep(mTimeGapOfReconnect + new Random().nextInt(5));
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    if (reconnect != 0) {
+                        try {
+                            TimeUnit.SECONDS.sleep(reconnect < 5 ? mTimeGapOfBigReconnect : mTimeGapOfReconnect +
+                                    new Random().nextInt(5));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        updateSalesByFlags(flag, isDaily, reconnect);
                     }
-                    updateSalesByFlags(flag, isDaily, reconnect);
+
                 });
     }
 
