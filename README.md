@@ -1,5 +1,6 @@
 #anime-sales-server
 这个是[anime-sales](http://anime-sales.com)网站的后台project, 主要用于爬取oricon各种销量数据.
+前端project地址:[地址](https://github.com/hanFengSan/anime-sales)
 
 ## 使用
 在`ServerAPI.java`中补充`oricon`会员的ID和密码.
