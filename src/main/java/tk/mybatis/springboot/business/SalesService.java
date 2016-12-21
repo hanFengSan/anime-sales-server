@@ -189,10 +189,9 @@ public class SalesService {
         container.setUpdateTime(SalesTableService.getInstance().getUpdateTime(html, true));
         container.setNextUpdateTime(SalesTableService.getInstance().getNextUpdateTime(container.getUpdateTime(), true));
         if (mDailySales.containsKey(flag)) {
-            mDailySales.replace(flag, gson.toJson(container));
-        } else {
-            mDailySales.put(flag, gson.toJson(container));
+            mDailySales.remove(flag);
         }
+        mDailySales.put(flag, gson.toJson(container));
     }
 
     private void saveWeeklySalesCache(String flag, String html) {
@@ -201,10 +200,10 @@ public class SalesService {
         container.setUpdateTime(SalesTableService.getInstance().getUpdateTime(html, false));
         container.setNextUpdateTime(SalesTableService.getInstance().getNextUpdateTime(container.getUpdateTime(), false));
         if (mWeeklySales.containsKey(flag)) {
-            mWeeklySales.replace(flag, gson.toJson(container));
-        } else {
-            mWeeklySales.put(flag, gson.toJson(container));
+            mWeeklySales.remove(flag);
         }
+        mWeeklySales.put(flag, gson.toJson(container));
+
     }
 
     private void saveOtherDVDSalesCache(String type, String[] pages) {
@@ -215,10 +214,9 @@ public class SalesService {
         container.setUpdateTime(OtherDVDTableService.getInstance().getUpdateTime());
         container.setNextUpdateTime(OtherDVDTableService.getInstance().getNextUpdateTime(container.getUpdateTime()));
         if (mDailySales.containsKey(type)) {
-            mDailySales.replace(type, gson.toJson(container));
-        } else {
-            mDailySales.put(type, gson.toJson(container));
+            mDailySales.remove(type);
         }
+        mDailySales.put(type, gson.toJson(container));
     }
 
     private void updateSalesByFlags(String flag, boolean isDaily, final int reconnectTimes) {
