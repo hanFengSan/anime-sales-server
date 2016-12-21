@@ -2,6 +2,7 @@ package tk.mybatis.springboot.bean;
 
 import tk.mybatis.springboot.bean.base.Entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -9,7 +10,7 @@ import java.util.List;
  * Emm...
  */
 public class SalesContainer<T extends Entity> {
-    private List<T> list;
+    private List<T> list = new ArrayList<T>();
     private long updateTime;
     private long nextUpdateTime;
 

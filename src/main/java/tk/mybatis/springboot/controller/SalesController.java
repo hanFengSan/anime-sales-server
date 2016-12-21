@@ -25,7 +25,7 @@ public class SalesController {
         ResponseUtils.renderJson(response, JsonResponse.getJson("result", "OK"));
     }
 
-    @RequestMapping(path="/daily", params = {"flag"})
+    @RequestMapping(path="/daily")
     public void getDaily(HttpServletRequest request,
                         HttpServletResponse response,
                         @RequestParam(value = "flag") String flag) {
@@ -33,7 +33,7 @@ public class SalesController {
         ResponseUtils.renderJson(response, SalesService.getInstance().getDaily(flag));
     }
 
-    @RequestMapping(path="/weekly", params = {"flag"})
+    @RequestMapping(path="/weekly")
     public void getWeekly(HttpServletRequest request,
                          HttpServletResponse response,
                          @RequestParam(value = "flag") String flag) {

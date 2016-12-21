@@ -81,7 +81,7 @@ public class SalesTableService {
 
     public long getNextUpdateTime(long time, boolean isDaily) {
         LocalDateTime date = LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.of("Japan"));
-        date = date.plusDays(isDaily ? 2 : 7);
+        date = date.plusDays(isDaily ? 2 : 0);
         LocalDateTime ldt = LocalDateTime.of(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), isDaily ? 19 : 17, 0, 0);
         ZonedDateTime zdt = ldt.atZone(ZoneId.of("Japan"));
         return zdt.toInstant().toEpochMilli();

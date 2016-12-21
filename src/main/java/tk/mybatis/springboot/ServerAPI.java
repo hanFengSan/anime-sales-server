@@ -20,9 +20,6 @@ public class ServerAPI {
 
     public final static String mOriconHost = "https://ranking.oricon.co.jp";
 
-    public final static int loginX = 34;
-    public final static int loginY = 24;
-
     private static String mCookies = "";
 
     private static OriconAPI mOriconAPI;
