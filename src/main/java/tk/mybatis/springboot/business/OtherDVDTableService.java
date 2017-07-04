@@ -50,7 +50,7 @@ public class OtherDVDTableService {
         ZonedDateTime japanTime = ZonedDateTime.now(ZoneId.of("Japan"));
         japanTime = japanTime.minusDays(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        String dateStr = String.format("%d/%2d/%2d", japanTime.getYear(), japanTime.getMonthValue(), japanTime.getDayOfMonth());
+        String dateStr = String.format("%d/%02d/%02d", japanTime.getYear(), japanTime.getMonthValue(), japanTime.getDayOfMonth());
         LocalDate date = LocalDate.parse(dateStr, formatter);
         LocalDateTime ldt = LocalDateTime.of(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), 19, 0, 0);
         ZonedDateTime zdt = ldt.atZone(ZoneId.of("Japan"));

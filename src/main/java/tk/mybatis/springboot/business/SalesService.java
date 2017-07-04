@@ -77,17 +77,6 @@ public class SalesService {
     }
 
     private SalesService() {
-        // init RomanNumConvertedMap
-        mRomanNumConvertedMap.put("�T", "Ⅰ");
-        mRomanNumConvertedMap.put("�U", "Ⅱ");
-        mRomanNumConvertedMap.put("�V", "Ⅲ");
-        mRomanNumConvertedMap.put("�W", "Ⅳ");
-        mRomanNumConvertedMap.put("�X", "Ⅴ");
-        mRomanNumConvertedMap.put("�Y", "Ⅵ");
-        mRomanNumConvertedMap.put("�Z", "Ⅶ");
-        mRomanNumConvertedMap.put("�[", "Ⅷ");
-        mRomanNumConvertedMap.put("�\\", "Ⅸ");
-        mRomanNumConvertedMap.put("�]", "Ⅹ");
     }
 
     public void run() {
@@ -98,14 +87,19 @@ public class SalesService {
         Application.logger.info("init...");
         mStatus = STATUS_INITING;
 
+        // 开启一个线程以运行循环任务
         Observable.just("")
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.newThread())
                 .subscribe(tmp -> {
                     Boolean isFirst = true;
+                    // 创建一个死循环, 不断更新数据
                     while (mStatus != STATUS_STOPPED) {
                         try {
+                            // 更新数据
                             getData(mReconnectedTimes);
+
+                            // 以下是睡眠判定, 睡眠到指定时间点再运行
                             // get updateTimeStr
                             ZonedDateTime japanTime = ZonedDateTime.now(ZoneId.of("Japan"));
                             int timeInt = japanTime.getHour() * 100 + japanTime.getMinute();
@@ -170,13 +164,7 @@ public class SalesService {
 
     private String getStrFromShiftJIS(ResponseBody body) {
         try {
-            String result = body.source().readString(Charset.forName("Shift_JIS"));
-            for (String key : mRomanNumConvertedMap.keySet()) {
-                if (result.contains(key)) {
-                    result = result.replaceAll(key, mRomanNumConvertedMap.get(key));
-                }
-            }
-            return result;
+            return body.source().readString(Charset.forName("Windows-31J"));
         } catch (Exception e) {
             e.printStackTrace();
             return "";
@@ -258,7 +246,7 @@ public class SalesService {
     private void updateOtherDVD(String type) {
         ZonedDateTime japanTime = (ZonedDateTime.now(ZoneId.of("Japan"))).minusDays(1);
         japanTime = japanTime.minusDays(1);
-        String date = String.format("%d-%2d-%2d", japanTime.getYear(), japanTime.getMonthValue(), japanTime.getDayOfMonth());
+        String date = String.format("%d-%02d-%02d", japanTime.getYear(), japanTime.getMonthValue(), japanTime.getDayOfMonth());
         String p1 = "http://www.oricon.co.jp/rank/" + type + "/d/" + date + "/";
         String p2 = "http://www.oricon.co.jp/rank/" + type + "/d/" + date + "/p/2/";
         String[] htmlArr = {"", ""};
