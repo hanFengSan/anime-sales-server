@@ -18,7 +18,7 @@ public class SalesFileService {
 
     private static SalesFileService ourInstance = new SalesFileService();
 
-    protected static String mDestPath = "../mzzb-rank-bottle";
+    protected static String mDestPath = "./mzzb-rank-bottle";
 
     public static SalesFileService getInstance() {
         return ourInstance;
