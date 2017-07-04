@@ -9,6 +9,8 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Yakami on 16/12/20.
@@ -45,16 +47,20 @@ public class OtherDVDTableService {
         return sales;
     }
 
-
-    public long getUpdateTime() {
-        ZonedDateTime japanTime = ZonedDateTime.now(ZoneId.of("Japan"));
-        japanTime = japanTime.minusDays(1);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        String dateStr = String.format("%d/%02d/%02d", japanTime.getYear(), japanTime.getMonthValue(), japanTime.getDayOfMonth());
-        LocalDate date = LocalDate.parse(dateStr, formatter);
-        LocalDateTime ldt = LocalDateTime.of(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), 19, 0, 0);
-        ZonedDateTime zdt = ldt.atZone(ZoneId.of("Japan"));
-        return zdt.toInstant().toEpochMilli();
+    public long getUpdateTime(String html) {
+        Pattern pattern = Pattern.compile("<h2 class=\"ttl-b\">.*?付</h2>");
+        Matcher matcher = pattern.matcher(html);
+        if (matcher.find()) {
+            String time = matcher.group(0);
+            time = time.replace("<h2 class=\"ttl-b\">", "");
+            time = time.replace("付</h2>", "");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
+            LocalDate date = LocalDate.parse(time, formatter);
+            LocalDateTime ldt = LocalDateTime.of(date.getYear(), date.getMonthValue(), date.getDayOfMonth(), 19, 0, 0);
+            ZonedDateTime zdt = ldt.atZone(ZoneId.of("Japan"));
+            return zdt.toInstant().toEpochMilli();
+        }
+        return 0;
     }
 
     public long getNextUpdateTime(long time) {

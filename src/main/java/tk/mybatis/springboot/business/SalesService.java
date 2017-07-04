@@ -10,6 +10,7 @@ import tk.mybatis.springboot.ServerAPI;
 import tk.mybatis.springboot.bean.DailySales;
 import tk.mybatis.springboot.bean.SalesContainer;
 import tk.mybatis.springboot.bean.WeeklySales;
+import tk.mybatis.springboot.util.TimeUtils;
 
 import java.nio.charset.Charset;
 import java.time.ZoneId;
@@ -32,7 +33,7 @@ public class SalesService {
 
     private static int mTimeGapOfBigReconnection = 60 * 2; //sec
     private static int mTimeGapOfReconnection = 2; //sec
-    private static int mReconnectedTimes = 10;
+    private static int mReconnectedTimes = 5;
 
     private static final String OTHER_DAILY_DVD_ANIME = "da"; // daily anime dvd
     private static final String OTHER_DAILY_DVD_MOVIE = "mv"; // daily movie dvd
@@ -51,7 +52,6 @@ public class SalesService {
     private static final String[] WEEKLY = {
             "116103", // weekly anime BD
             "114103", // weekly anime DVD
-            "114103", // weekly anime dvd
             "116", // weekly video BD
             "114", // weekly video DVD
             "111", // weekly single
@@ -62,14 +62,13 @@ public class SalesService {
             "116104", // weekly tv bd
     };
 
-    private HashMap<String, String> mRomanNumConvertedMap = new HashMap<>(); //shift_jis解码时,罗马数字会乱码, 采用map替换
-
     private int mStatus;
 
     private HashMap<String, String> mDailySales = new HashMap<>(); // daily data cache
     private HashMap<String, String> mWeeklySales = new HashMap<>();
 
-    private static String[] mUpdateTime = {"17:00", "17:05", "17:15", "19:00", "19:05", "19:15", "20:00", "21:00"}; //JapanTime, 需要更新的时间点
+    private static String[] mUpdateTime = {"6:00", "9:00", "12:00", "15:00", "17:00", "17:01", "17:05", "17:15", "19:00",
+            "19:01", "19:05", "19:15", "20:00", "21:00"}; //JapanTime, 需要更新的时间点
     private Gson gson = new Gson();
 
     public static SalesService getInstance() {
@@ -92,7 +91,6 @@ public class SalesService {
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.newThread())
                 .subscribe(tmp -> {
-                    Boolean isFirst = true;
                     // 创建一个死循环, 不断更新数据
                     while (mStatus != STATUS_STOPPED) {
                         try {
@@ -138,6 +136,7 @@ public class SalesService {
         Application.logger.info("stopped");
     }
 
+    // 更新所有数据
     private void getData(final int reconnectTimes) {
         ServerAPI.withPermission()
                 .subscribeOn(Schedulers.io())
@@ -164,10 +163,33 @@ public class SalesService {
 
     private String getStrFromShiftJIS(ResponseBody body) {
         try {
-            return body.source().readString(Charset.forName("Windows-31J"));
+            return body.source().readString(Charset.forName("Windows-31J")); // shift_jis大坑, 用超集Windows-31J避免扩展字符乱码
         } catch (Exception e) {
             e.printStackTrace();
             return "";
+        }
+    }
+
+    private void saveDataToFile(String flag, String date, String json, String visualTxt) {
+        try {
+            SalesFileService.getInstance().save(flag, date, json, visualTxt);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Application.logger.error("持久化数据错误");
+        }
+    }
+
+    private void saveCache(HashMap<String, String> sales, String flag, String json, String visualTxt, String date) {
+        if (sales.containsKey(flag)) {
+            if (!sales.get(flag).equals(json)) {
+                sales.remove(flag);
+                sales.put(flag, json);
+                // 持久化数据
+                saveDataToFile(flag, date, json, visualTxt);
+            }
+        } else {
+            sales.put(flag, json);
+            saveDataToFile(flag, date, json, visualTxt);
         }
     }
 
@@ -175,11 +197,10 @@ public class SalesService {
         SalesContainer<DailySales> container = new SalesContainer<>();
         container.setList((SalesTableService.getInstance().getDailySalesList(html)));
         container.setUpdateTime(SalesTableService.getInstance().getUpdateTime(html, true));
+        container.setUpdateTime(SalesTableService.getInstance().getUpdateTime(html, true));
         container.setNextUpdateTime(SalesTableService.getInstance().getNextUpdateTime(container.getUpdateTime(), true));
-        if (mDailySales.containsKey(flag)) {
-            mDailySales.remove(flag);
-        }
-        mDailySales.put(flag, gson.toJson(container));
+        saveCache(mDailySales, flag, gson.toJson(container), container.toVisualTxt(1),
+                TimeUtils.timeToDateStr(container.getCNUpdateTime()));
     }
 
     private void saveWeeklySalesCache(String flag, String html) {
@@ -187,11 +208,8 @@ public class SalesService {
         container.setList((SalesTableService.getInstance().getWeeklySalesList(html)));
         container.setUpdateTime(SalesTableService.getInstance().getUpdateTime(html, false));
         container.setNextUpdateTime(SalesTableService.getInstance().getNextUpdateTime(container.getUpdateTime(), false));
-        if (mWeeklySales.containsKey(flag)) {
-            mWeeklySales.remove(flag);
-        }
-        mWeeklySales.put(flag, gson.toJson(container));
-
+        saveCache(mWeeklySales, flag, gson.toJson(container), container.toVisualTxt(2),
+                TimeUtils.timeToDateStr(container.getUpdateTime()));
     }
 
     private void saveOtherDVDSalesCache(String type, String[] pages) {
@@ -199,12 +217,11 @@ public class SalesService {
         for (String html : pages) {
             container.getList().addAll(OtherDVDTableService.getInstance().getOtherDVDDailySales(html));
         }
-        container.setUpdateTime(OtherDVDTableService.getInstance().getUpdateTime());
+//        container.setUpdateTime(OtherDVDTableService.getInstance().getUpdateTime());
+        container.setUpdateTime(OtherDVDTableService.getInstance().getUpdateTime(pages[0]));
         container.setNextUpdateTime(OtherDVDTableService.getInstance().getNextUpdateTime(container.getUpdateTime()));
-        if (mDailySales.containsKey(type)) {
-            mDailySales.remove(type);
-        }
-        mDailySales.put(type, gson.toJson(container));
+        saveCache(mDailySales, type, gson.toJson(container), container.toVisualTxt(1),
+                TimeUtils.timeToDateStr(container.getCNUpdateTime()));
     }
 
     private void updateSalesByFlags(String flag, boolean isDaily, final int reconnectTimes) {
